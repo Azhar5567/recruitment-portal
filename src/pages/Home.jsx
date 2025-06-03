@@ -20,27 +20,36 @@ export default function Home() {
   if (checkingAuth) return null;
 
   return (
-    <div className="min-h-screen bg-white text-gray-900">
+    <div className="min-h-screen bg-gray-50 text-gray-800">
       <Header />
-      <main className="max-w-2xl mx-auto px-4 py-24 text-center">
-        <h1 className="text-4xl font-semibold mb-4">
-          Welcome to <span className="text-indigo-600">RecruitHub</span>
+      <main className="max-w-3xl mx-auto px-6 py-24 text-center">
+        <h1 className="text-4xl font-bold text-indigo-700 mb-4">
+          Elevate Your Hiring Process
         </h1>
         <p className="text-lg text-gray-600 mb-10">
-          A streamlined hiring tool to help you manage job roles, track candidates, and collaborate with your team — all in one place.
+          RecruitHub empowers modern hiring teams to organize roles, manage candidates, and drive decisions — all in one intuitive platform.
         </p>
 
-        <ul className="text-left text-gray-700 mb-12 space-y-2 text-base">
-          <li>• Clean, customizable candidate pipeline</li>
-          <li>• Smart resume tracking with role context</li>
-          <li>• Real-time collaboration with your team</li>
-        </ul>
+        <div className="text-left text-sm text-gray-700 space-y-3 mb-12 max-w-md mx-auto">
+          <div className="flex items-start gap-2">
+            <span className="text-indigo-600 font-bold">▸</span>
+            <span>Structured role and candidate pipelines</span>
+          </div>
+          <div className="flex items-start gap-2">
+            <span className="text-indigo-600 font-bold">▸</span>
+            <span>Collaborative workflow across your team</span>
+          </div>
+          <div className="flex items-start gap-2">
+            <span className="text-indigo-600 font-bold">▸</span>
+            <span>Centralized tracking, notes, and resumes</span>
+          </div>
+        </div>
 
         <Link
           to="/roles"
-          className="inline-block bg-black hover:bg-gray-900 text-white px-6 py-3 rounded-full text-sm font-medium transition"
+          className="inline-block bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-3 rounded-md text-sm font-medium shadow-sm transition"
         >
-          Go to Roles
+          Get Started
         </Link>
       </main>
     </div>
