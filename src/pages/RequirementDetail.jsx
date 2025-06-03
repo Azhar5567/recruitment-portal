@@ -4,8 +4,9 @@ import { useParams } from 'react-router-dom';
 import { DndProvider, useDrag, useDrop } from 'react-dnd';
 import { HTML5Backend } from 'react-dnd-html5-backend';
 import Header from '../components/Header';
-import { db } from '../firebase';
+import { db, auth } from '../firebase';
 import { doc, setDoc, getDoc } from 'firebase/firestore';
+import { onAuthStateChanged } from 'firebase/auth';
 
 const ItemTypes = { COLUMN: 'column', ROW: 'row' };
 
@@ -99,6 +100,7 @@ export default function RequirementDetail() {
   const { roleName } = useParams();
   const decodedRole = roleName ? decodeURIComponent(roleName) : 'Unknown';
 
+  const [user, setUser] = useState(null);
   const [rows, setRows] = useState([]);
   const [columns, setColumns] = useState([
     { key: 'resume', label: 'Resume' },
@@ -123,9 +125,19 @@ export default function RequirementDetail() {
   const [filter, setFilter] = useState('');
 
   useEffect(() => {
+    const unsub = onAuthStateChanged(auth, (currentUser) => {
+      if (currentUser) {
+        setUser(currentUser);
+      }
+    });
+    return () => unsub();
+  }, []);
+
+  useEffect(() => {
     const fetchCandidates = async () => {
+      if (!user) return;
       try {
-        const docRef = doc(db, 'candidates', decodedRole);
+        const docRef = doc(db, 'users', user.uid, 'candidates', decodedRole);
         const snapshot = await getDoc(docRef);
         if (snapshot.exists()) {
           const data = snapshot.data();
@@ -139,7 +151,7 @@ export default function RequirementDetail() {
     };
 
     fetchCandidates();
-  }, [decodedRole]);
+  }, [user, decodedRole]);
 
   const addRow = () => {
     const newRow = {};
@@ -208,7 +220,8 @@ export default function RequirementDetail() {
   };
 
   const saveCandidates = async () => {
-    const roleDocRef = doc(db, 'candidates', decodedRole);
+    if (!user) return;
+    const roleDocRef = doc(db, 'users', user.uid, 'candidates', decodedRole);
     try {
       const cleanedRows = rows.map(row => {
         const cleaned = { ...row };
