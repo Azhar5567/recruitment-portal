@@ -20,25 +20,25 @@ export default function Home() {
   if (checkingAuth) return null;
 
   return (
-    <div className="min-h-screen bg-white text-gray-800">
+    <div className="min-h-screen bg-white text-gray-900">
       <Header />
-      <main className="max-w-3xl mx-auto px-6 py-20 text-center">
-        <h1 className="text-4xl sm:text-5xl font-bold text-indigo-700 mb-6">
-          Welcome to <span className="text-black">RecruitHub</span>
+      <main className="max-w-2xl mx-auto px-4 py-24 text-center">
+        <h1 className="text-4xl font-semibold mb-4">
+          Welcome to <span className="text-indigo-600">RecruitHub</span>
         </h1>
         <p className="text-lg text-gray-600 mb-10">
-          Simplify your hiring process — manage roles, track candidates, and collaborate effortlessly.
+          A streamlined hiring tool to help you manage job roles, track candidates, and collaborate with your team — all in one place.
         </p>
 
-        <div className="grid gap-4 text-sm text-left max-w-md mx-auto mb-10">
-          <div>✅ Customizable candidate pipeline</div>
-          <div>✅ Drag-and-drop resume management</div>
-          <div>✅ Role-based candidate tracking</div>
-        </div>
+        <ul className="text-left text-gray-700 mb-12 space-y-2 text-base">
+          <li>• Clean, customizable candidate pipeline</li>
+          <li>• Smart resume tracking with role context</li>
+          <li>• Real-time collaboration with your team</li>
+        </ul>
 
         <Link
           to="/roles"
-          className="inline-block bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-3 rounded-lg font-semibold transition"
+          className="inline-block bg-black hover:bg-gray-900 text-white px-6 py-3 rounded-full text-sm font-medium transition"
         >
           Go to Roles
         </Link>
