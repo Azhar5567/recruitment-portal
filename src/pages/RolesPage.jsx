@@ -15,45 +15,48 @@ export default function RolesPage() {
   const [newRole, setNewRole] = useState('');
   const [checkingAuth, setCheckingAuth] = useState(true);
   const [loading, setLoading] = useState(true);
+  const [user, setUser] = useState(null);
   const navigate = useNavigate();
 
-  // 🔐 Auth check
+  // ✅ Auth check + set user
   useEffect(() => {
-    const unsub = onAuthStateChanged(auth, (user) => {
-      if (!user) navigate('/login');
-      setCheckingAuth(false);
+    const unsub = onAuthStateChanged(auth, (currentUser) => {
+      if (!currentUser) {
+        navigate('/login');
+      } else {
+        setUser(currentUser);
+        setCheckingAuth(false);
+      }
     });
     return () => unsub();
   }, [navigate]);
 
-  // 🧠 Load from cache first (for fast load)
+  // ✅ Load roles for the logged-in user only
   useEffect(() => {
-    const cached = sessionStorage.getItem('roles');
-    if (cached) {
-      setRoles(JSON.parse(cached));
-      setLoading(false);
-    }
+    if (!user) return;
 
-    // 🔄 Real-time Firestore sync
-    const unsub = onSnapshot(collection(db, 'roles'), (snapshot) => {
-      const roleNames = snapshot.docs.map((doc) => doc.data().name || '').filter(Boolean);
-      setRoles(roleNames);
-      sessionStorage.setItem('roles', JSON.stringify(roleNames)); // Update cache
-      setLoading(false);
-    }, (error) => {
-      console.error('Error fetching roles:', error);
-      setLoading(false);
-    });
+    const unsub = onSnapshot(
+      collection(db, 'users', user.uid, 'roles'),
+      (snapshot) => {
+        const roleNames = snapshot.docs.map((doc) => doc.data().name || '').filter(Boolean);
+        setRoles(roleNames);
+        setLoading(false);
+      },
+      (error) => {
+        console.error('Error fetching roles:', error);
+        setLoading(false);
+      }
+    );
 
-    return () => unsub(); // Cleanup listener
-  }, []);
+    return () => unsub();
+  }, [user]);
 
-  // ➕ Add new role to Firestore
+  // ➕ Add new role to Firestore under user
   const addRole = async () => {
     const trimmed = newRole.trim();
     if (trimmed && !roles.includes(trimmed)) {
       try {
-        await addDoc(collection(db, 'roles'), { name: trimmed });
+        await addDoc(collection(db, 'users', user.uid, 'roles'), { name: trimmed });
         setNewRole('');
       } catch (err) {
         console.error('Error adding role:', err);
@@ -74,7 +77,7 @@ export default function RolesPage() {
       <Header />
 
       <main className="max-w-xl mx-auto px-4 py-10">
-        <h2 className="text-2xl font-bold mb-6 text-center">Manage Job Roles</h2>
+        <h2 className="text-2xl font-bold mb-6 text-center">Manage Your Job Roles</h2>
 
         <div className="mb-6">
           <input
@@ -93,7 +96,7 @@ export default function RolesPage() {
           </button>
         </div>
 
-        <h3 className="text-lg font-semibold mb-3">Available Roles</h3>
+        <h3 className="text-lg font-semibold mb-3">Your Roles</h3>
         {roles.length === 0 ? (
           <p className="text-gray-500">No roles added yet. Use the form above to create one.</p>
         ) : (
