@@ -2,43 +2,65 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { onAuthStateChanged } from 'firebase/auth';
-import { auth } from '../firebase';
+import { auth, db } from '../firebase';
 import Header from '../components/Header';
+import {
+  collection,
+  addDoc,
+  getDocs,
+  query,
+  where
+} from 'firebase/firestore';
 
 export default function RolesPage() {
   const [roles, setRoles] = useState([]);
   const [newRole, setNewRole] = useState('');
   const [checkingAuth, setCheckingAuth] = useState(true);
+  const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
 
-  // 🔒 Redirect if not authenticated
+  // 🔐 Auth check
   useEffect(() => {
     const unsub = onAuthStateChanged(auth, (user) => {
       if (!user) navigate('/login');
       setCheckingAuth(false);
     });
-
     return () => unsub();
   }, [navigate]);
 
+  // ⏬ Fetch roles from Firestore
   useEffect(() => {
-    const saved = JSON.parse(localStorage.getItem('roles') || '[]');
-    setRoles(saved);
+    const fetchRoles = async () => {
+      setLoading(true);
+      try {
+        const snapshot = await getDocs(collection(db, 'roles'));
+        const roleNames = snapshot.docs.map((doc) => doc.data().name);
+        setRoles(roleNames);
+      } catch (err) {
+        console.error('Error fetching roles:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchRoles();
   }, []);
 
-  useEffect(() => {
-    localStorage.setItem('roles', JSON.stringify(roles));
-  }, [roles]);
-
-  const addRole = () => {
+  // ➕ Add new role to Firestore
+  const addRole = async () => {
     const trimmed = newRole.trim();
     if (trimmed && !roles.includes(trimmed)) {
-      setRoles([...roles, trimmed]);
-      setNewRole('');
+      try {
+        await addDoc(collection(db, 'roles'), { name: trimmed });
+        setRoles([...roles, trimmed]);
+        setNewRole('');
+      } catch (err) {
+        console.error('Error adding role:', err);
+      }
     }
   };
 
-  if (checkingAuth) return null; // or <div>Loading...</div>
+  if (checkingAuth || loading) return null; // Or show a loader
 
   return (
     <div className="min-h-screen bg-gray-50 text-gray-800">
