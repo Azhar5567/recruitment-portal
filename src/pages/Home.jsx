@@ -22,34 +22,26 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-white text-gray-800">
       <Header />
-      <main className="flex flex-col-reverse md:flex-row items-center justify-between max-w-7xl mx-auto px-6 py-20 gap-12">
-        <div className="flex-1">
-          <h1 className="text-5xl font-bold mb-6 text-indigo-700">
-            Streamline Your <span className="text-black">Hiring Workflow</span>
-          </h1>
-          <p className="text-lg text-gray-600 mb-8 max-w-xl">
-            Manage roles, track candidates, and collaborate in one place.
-          </p>
-          <ul className="space-y-2 mb-6 text-sm text-gray-700">
-            <li>✅ Customizable pipelines</li>
-            <li>✅ Drag-and-drop resumes</li>
-            <li>✅ Role-based tracking</li>
-          </ul>
-          <Link
-            to="/roles"
-            className="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-3 rounded-lg font-medium"
-          >
-            Go to Roles
-          </Link>
+      <main className="max-w-3xl mx-auto px-6 py-20 text-center">
+        <h1 className="text-4xl sm:text-5xl font-bold text-indigo-700 mb-6">
+          Welcome to <span className="text-black">RecruitHub</span>
+        </h1>
+        <p className="text-lg text-gray-600 mb-10">
+          Simplify your hiring process — manage roles, track candidates, and collaborate effortlessly.
+        </p>
+
+        <div className="grid gap-4 text-sm text-left max-w-md mx-auto mb-10">
+          <div>✅ Customizable candidate pipeline</div>
+          <div>✅ Drag-and-drop resume management</div>
+          <div>✅ Role-based candidate tracking</div>
         </div>
 
-        <div className="flex-1 max-w-md">
-          <img
-            src="/images/recruitment.svg"
-            alt="Recruitment"
-            className="w-full h-auto"
-          />
-        </div>
+        <Link
+          to="/roles"
+          className="inline-block bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-3 rounded-lg font-semibold transition"
+        >
+          Go to Roles
+        </Link>
       </main>
     </div>
   );
