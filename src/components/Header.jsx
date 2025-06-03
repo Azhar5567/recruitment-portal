@@ -1,12 +1,19 @@
 // src/components/Header.jsx
 import { Link, useNavigate } from 'react-router-dom';
 import { Home, Briefcase, LogOut } from 'lucide-react';
+import { signOut } from 'firebase/auth';
+import { auth } from '../firebase';
 
 export default function Header() {
   const navigate = useNavigate();
 
-  const handleLogout = () => {
-    navigate('/login');
+  const handleLogout = async () => {
+    try {
+      await signOut(auth);
+      navigate('/login');
+    } catch (err) {
+      console.error('Error signing out:', err);
+    }
   };
 
   return (
