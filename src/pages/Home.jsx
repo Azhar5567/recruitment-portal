@@ -1,5 +1,4 @@
-// src/pages/Home.jsx
-import { useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { onAuthStateChanged } from 'firebase/auth';
 import { auth } from '../firebase';
@@ -7,19 +6,23 @@ import Header from '../components/Header';
 
 export default function Home() {
   const navigate = useNavigate();
+  const [checkingAuth, setCheckingAuth] = useState(true);
 
   useEffect(() => {
     const unsub = onAuthStateChanged(auth, (user) => {
-      if (!user) navigate('/login');
+      if (!user) {
+        navigate('/login');
+      }
+      setCheckingAuth(false);
     });
-
     return () => unsub();
   }, [navigate]);
+
+  if (checkingAuth) return null; // or show loader
 
   return (
     <div className="min-h-screen bg-gray-50 text-gray-800">
       <Header />
-
       <main className="flex flex-col items-center justify-center px-4 py-16 text-center">
         <h1 className="text-3xl sm:text-4xl font-bold mb-4">
           Welcome to the <span className="text-indigo-600">Recruitment Portal</span>
@@ -27,7 +30,6 @@ export default function Home() {
         <p className="max-w-xl text-base sm:text-lg text-gray-600 mb-8">
           Add roles, manage candidates, and streamline your hiring process with ease.
         </p>
-
         <Link
           to="/roles"
           className="inline-block bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-3 rounded-md text-base font-medium transition"

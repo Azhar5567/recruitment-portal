@@ -8,12 +8,14 @@ import Header from '../components/Header';
 export default function RolesPage() {
   const [roles, setRoles] = useState([]);
   const [newRole, setNewRole] = useState('');
+  const [checkingAuth, setCheckingAuth] = useState(true);
   const navigate = useNavigate();
 
   // 🔒 Redirect if not authenticated
   useEffect(() => {
     const unsub = onAuthStateChanged(auth, (user) => {
       if (!user) navigate('/login');
+      setCheckingAuth(false);
     });
 
     return () => unsub();
@@ -35,6 +37,8 @@ export default function RolesPage() {
       setNewRole('');
     }
   };
+
+  if (checkingAuth) return null; // or <div>Loading...</div>
 
   return (
     <div className="min-h-screen bg-gray-50 text-gray-800">
@@ -81,4 +85,3 @@ export default function RolesPage() {
     </div>
   );
 }
-
