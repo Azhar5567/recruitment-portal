@@ -1,6 +1,8 @@
 // src/pages/Login.jsx
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { signInWithEmailAndPassword, onAuthStateChanged } from 'firebase/auth';
+import { auth } from '../firebase';
 
 export default function Login() {
   const [email, setEmail] = useState('');
@@ -8,18 +10,28 @@ export default function Login() {
   const [error, setError] = useState('');
   const navigate = useNavigate();
 
-  const handleLogin = (e) => {
+  // Redirect if already logged in
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      if (user) {
+        navigate('/');
+      }
+    });
+    return () => unsubscribe();
+  }, [navigate]);
+
+  const handleLogin = async (e) => {
     e.preventDefault();
     if (!email || !password) {
       setError('Email and password are required.');
       return;
     }
 
-    // Dummy login logic
-    if (email === 'admin@example.com' && password === 'password') {
+    try {
+      await signInWithEmailAndPassword(auth, email, password);
       navigate('/');
-    } else {
-      setError('Invalid email or password.');
+    } catch (err) {
+      setError('Login failed: ' + err.message);
     }
   };
 

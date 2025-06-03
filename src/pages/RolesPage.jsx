@@ -1,12 +1,23 @@
 // src/pages/RolesPage.jsx
 import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { onAuthStateChanged } from 'firebase/auth';
+import { auth } from '../firebase';
 import Header from '../components/Header';
 
 export default function RolesPage() {
   const [roles, setRoles] = useState([]);
   const [newRole, setNewRole] = useState('');
   const navigate = useNavigate();
+
+  // 🔒 Redirect if not authenticated
+  useEffect(() => {
+    const unsub = onAuthStateChanged(auth, (user) => {
+      if (!user) navigate('/login');
+    });
+
+    return () => unsub();
+  }, [navigate]);
 
   useEffect(() => {
     const saved = JSON.parse(localStorage.getItem('roles') || '[]');
@@ -70,5 +81,4 @@ export default function RolesPage() {
     </div>
   );
 }
-
 

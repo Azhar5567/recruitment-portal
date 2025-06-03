@@ -1,8 +1,21 @@
 // src/pages/Home.jsx
-import { Link } from 'react-router-dom';
+import { useEffect } from 'react';
+import { useNavigate, Link } from 'react-router-dom';
+import { onAuthStateChanged } from 'firebase/auth';
+import { auth } from '../firebase';
 import Header from '../components/Header';
 
 export default function Home() {
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    const unsub = onAuthStateChanged(auth, (user) => {
+      if (!user) navigate('/login');
+    });
+
+    return () => unsub();
+  }, [navigate]);
+
   return (
     <div className="min-h-screen bg-gray-50 text-gray-800">
       <Header />
