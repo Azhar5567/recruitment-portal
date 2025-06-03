@@ -1,9 +1,11 @@
 // src/pages/RequirementDetail.jsx
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { DndProvider, useDrag, useDrop } from 'react-dnd';
 import { HTML5Backend } from 'react-dnd-html5-backend';
 import Header from '../components/Header';
+import { db } from '../firebase';
+import { doc, setDoc } from 'firebase/firestore';
 
 const ItemTypes = { COLUMN: 'column', ROW: 'row' };
 
@@ -194,6 +196,25 @@ export default function RequirementDetail() {
     setRows(prev => prev.filter((_, i) => i !== index));
   };
 
+  const saveCandidates = async () => {
+    const roleDocRef = doc(db, 'candidates', decodedRole);
+    try {
+      const cleanedRows = rows.map(row => {
+        const cleaned = { ...row };
+        if (cleaned.resume instanceof File) {
+          cleaned.resume = cleaned.resume.name;
+        }
+        return cleaned;
+      });
+
+      await setDoc(roleDocRef, { candidates: cleanedRows });
+      alert('Candidates saved successfully!');
+    } catch (error) {
+      console.error('Error saving candidates:', error);
+      alert('Failed to save candidates');
+    }
+  };
+
   const filteredRows = rows.filter(r => {
     const values = Object.values(r).map(val => val?.name || val).join(' ').toLowerCase();
     return values.includes(filter.toLowerCase());
@@ -238,6 +259,10 @@ export default function RequirementDetail() {
               placeholder="Filter Candidates"
               className="flex-1 border px-3 py-2 rounded text-sm"
             />
+
+            <button onClick={saveCandidates} className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded text-sm">
+              Save Candidates
+            </button>
           </div>
 
           <div className="overflow-x-auto border rounded bg-white shadow-sm">
