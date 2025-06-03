@@ -7,9 +7,7 @@ import Header from '../components/Header';
 import {
   collection,
   addDoc,
-  getDocs,
-  query,
-  where
+  getDocs
 } from 'firebase/firestore';
 
 export default function RolesPage() {
@@ -31,10 +29,13 @@ export default function RolesPage() {
   // ⏬ Fetch roles from Firestore
   useEffect(() => {
     const fetchRoles = async () => {
-      setLoading(true);
       try {
         const snapshot = await getDocs(collection(db, 'roles'));
-        const roleNames = snapshot.docs.map((doc) => doc.data().name);
+        const roleNames = snapshot.docs.map((doc) => {
+          const data = doc.data();
+          console.log('Fetched role:', data); // 🐞 Debug
+          return data?.name || '';
+        }).filter(name => name); // Only non-empty names
         setRoles(roleNames);
       } catch (err) {
         console.error('Error fetching roles:', err);
@@ -60,7 +61,13 @@ export default function RolesPage() {
     }
   };
 
-  if (checkingAuth || loading) return null; // Or show a loader
+  if (checkingAuth || loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-100 text-gray-600">
+        Loading...
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-50 text-gray-800">
@@ -88,10 +95,10 @@ export default function RolesPage() {
 
         <h3 className="text-lg font-semibold mb-3">Available Roles</h3>
         {roles.length === 0 ? (
-          <p className="text-gray-500">No roles added yet.</p>
+          <p className="text-gray-500">No roles added yet. Use the form above to create one.</p>
         ) : (
           <ul className="space-y-2">
-            {[...roles].sort().map((role) => (
+            {roles.sort().map((role) => (
               <li key={role}>
                 <Link
                   to={`/roles/${encodeURIComponent(role)}`}
