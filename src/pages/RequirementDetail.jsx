@@ -1,11 +1,11 @@
 // src/pages/RequirementDetail.jsx
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { DndProvider, useDrag, useDrop } from 'react-dnd';
 import { HTML5Backend } from 'react-dnd-html5-backend';
 import Header from '../components/Header';
 import { db } from '../firebase';
-import { doc, setDoc } from 'firebase/firestore';
+import { doc, setDoc, getDoc } from 'firebase/firestore';
 
 const ItemTypes = { COLUMN: 'column', ROW: 'row' };
 
@@ -61,15 +61,7 @@ function DraggableRow({ row, index, columns, updateRow, moveRow, handleFileChang
               />
               {row[col.key] && (
                 <div className="text-xs mt-1 text-blue-600">
-                  <span>{row[col.key].name}</span>
-                  <a
-                    href={URL.createObjectURL(row[col.key])}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="ml-2 underline"
-                  >
-                    View
-                  </a>
+                  <span>{typeof row[col.key] === 'string' ? row[col.key] : row[col.key]?.name}</span>
                 </div>
               )}
             </>
@@ -129,6 +121,25 @@ export default function RequirementDetail() {
   const [newCol, setNewCol] = useState('');
   const [newStatus, setNewStatus] = useState('');
   const [filter, setFilter] = useState('');
+
+  useEffect(() => {
+    const fetchCandidates = async () => {
+      try {
+        const docRef = doc(db, 'candidates', decodedRole);
+        const snapshot = await getDoc(docRef);
+        if (snapshot.exists()) {
+          const data = snapshot.data();
+          if (Array.isArray(data.candidates)) {
+            setRows(data.candidates);
+          }
+        }
+      } catch (error) {
+        console.error('Error loading candidates:', error);
+      }
+    };
+
+    fetchCandidates();
+  }, [decodedRole]);
 
   const addRow = () => {
     const newRow = {};
