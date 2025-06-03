@@ -11,9 +11,7 @@ export default function Home() {
 
   useEffect(() => {
     const unsub = onAuthStateChanged(auth, (user) => {
-      if (!user) {
-        navigate('/login');
-      }
+      if (!user) navigate('/login');
       setCheckingAuth(false);
     });
     return () => unsub();
@@ -25,40 +23,30 @@ export default function Home() {
     <div className="min-h-screen bg-white text-gray-800">
       <Header />
       <main className="flex flex-col-reverse md:flex-row items-center justify-between max-w-7xl mx-auto px-6 py-20 gap-12">
-        {/* Text Content */}
         <div className="flex-1">
-          <h1 className="text-4xl sm:text-5xl font-bold mb-6 leading-tight text-indigo-700">
+          <h1 className="text-5xl font-bold mb-6 text-indigo-700">
             Streamline Your <span className="text-black">Hiring Workflow</span>
           </h1>
           <p className="text-lg text-gray-600 mb-8 max-w-xl">
-            RecruitHub helps you manage job roles, track candidates, and collaborate with your hiring team — all in one place.
+            Manage roles, track candidates, and collaborate in one place.
           </p>
-
-          <div className="space-y-3 mb-6">
-            <div className="flex items-center gap-2">
-              ✅ <span>Customizable candidate pipeline</span>
-            </div>
-            <div className="flex items-center gap-2">
-              ✅ <span>Drag-and-drop resume management</span>
-            </div>
-            <div className="flex items-center gap-2">
-              ✅ <span>Role-based candidate tracking</span>
-            </div>
-          </div>
-
+          <ul className="space-y-2 mb-6 text-sm text-gray-700">
+            <li>✅ Customizable pipelines</li>
+            <li>✅ Drag-and-drop resumes</li>
+            <li>✅ Role-based tracking</li>
+          </ul>
           <Link
             to="/roles"
-            className="inline-block bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-3 rounded-lg text-base font-semibold transition"
+            className="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-3 rounded-lg font-medium"
           >
             Go to Roles
           </Link>
         </div>
 
-        {/* Image/Illustration */}
-        <div className="flex-1 w-full max-w-md">
+        <div className="flex-1 max-w-md">
           <img
-            src="https://illustrations.popsy.co/gray/recruitment.svg"
-            alt="Recruitment illustration"
+            src="/images/recruitment.svg"
+            alt="Recruitment"
             className="w-full h-auto"
           />
         </div>
