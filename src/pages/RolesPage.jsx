@@ -7,7 +7,7 @@ import Header from '../components/Header';
 import {
   collection,
   addDoc,
-  getDocs
+  onSnapshot
 } from 'firebase/firestore';
 
 export default function RolesPage() {
@@ -26,25 +26,26 @@ export default function RolesPage() {
     return () => unsub();
   }, [navigate]);
 
-  // ⏬ Fetch roles from Firestore
+  // 🧠 Load from cache first (for fast load)
   useEffect(() => {
-    const fetchRoles = async () => {
-      try {
-        const snapshot = await getDocs(collection(db, 'roles'));
-        const roleNames = snapshot.docs.map((doc) => {
-          const data = doc.data();
-          console.log('Fetched role:', data); // 🐞 Debug
-          return data?.name || '';
-        }).filter(name => name); // Only non-empty names
-        setRoles(roleNames);
-      } catch (err) {
-        console.error('Error fetching roles:', err);
-      } finally {
-        setLoading(false);
-      }
-    };
+    const cached = sessionStorage.getItem('roles');
+    if (cached) {
+      setRoles(JSON.parse(cached));
+      setLoading(false);
+    }
 
-    fetchRoles();
+    // 🔄 Real-time Firestore sync
+    const unsub = onSnapshot(collection(db, 'roles'), (snapshot) => {
+      const roleNames = snapshot.docs.map((doc) => doc.data().name || '').filter(Boolean);
+      setRoles(roleNames);
+      sessionStorage.setItem('roles', JSON.stringify(roleNames)); // Update cache
+      setLoading(false);
+    }, (error) => {
+      console.error('Error fetching roles:', error);
+      setLoading(false);
+    });
+
+    return () => unsub(); // Cleanup listener
   }, []);
 
   // ➕ Add new role to Firestore
@@ -53,7 +54,6 @@ export default function RolesPage() {
     if (trimmed && !roles.includes(trimmed)) {
       try {
         await addDoc(collection(db, 'roles'), { name: trimmed });
-        setRoles([...roles, trimmed]);
         setNewRole('');
       } catch (err) {
         console.error('Error adding role:', err);
