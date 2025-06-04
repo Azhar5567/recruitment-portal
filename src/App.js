@@ -1,9 +1,15 @@
 // src/App.js
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-import Home from './pages/Home';
+
+import Dashboard from './pages/Dashboard';
 import Login from './pages/Login';
-import RolesPage from './pages/RolesPage';
-import RequirementDetail from './pages/RequirementDetail';
+import Roles from './pages/Roles';
+import RoleDetail from './pages/RoleDetail';
+import CandidateDetail from './pages/CandidateDetail';
+import Reports from './pages/Reports';
+import Team from './pages/Team';
+import Settings from './pages/Settings';
+import Help from './pages/Help';
 
 function NotFound() {
   return (
@@ -15,7 +21,7 @@ function NotFound() {
           href="/"
           className="mt-4 inline-block bg-indigo-600 text-white px-6 py-2 rounded hover:bg-indigo-700"
         >
-          Go Home
+          Go to Dashboard
         </a>
       </div>
     </div>
@@ -26,13 +32,18 @@ function App() {
   return (
     <Router>
       <Routes>
-        {/* Main Routes */}
-        <Route path="/" element={<Home />} />
+        {/* Core Routes */}
+        <Route path="/" element={<Dashboard />} />
         <Route path="/login" element={<Login />} />
-        <Route path="/roles" element={<RolesPage />} />
-        <Route path="/roles/:roleName" element={<RequirementDetail />} />
+        <Route path="/roles" element={<Roles />} />
+        <Route path="/roles/:roleId" element={<RoleDetail />} />
+        <Route path="/candidates/:candidateId" element={<CandidateDetail />} />
+        <Route path="/reports" element={<Reports />} />
+        <Route path="/team" element={<Team />} />
+        <Route path="/settings" element={<Settings />} />
+        <Route path="/help" element={<Help />} />
 
-        {/* Catch-all for unknown routes */}
+        {/* 404 Fallback */}
         <Route path="*" element={<NotFound />} />
       </Routes>
     </Router>
@@ -40,4 +51,3 @@ function App() {
 }
 
 export default App;
-
