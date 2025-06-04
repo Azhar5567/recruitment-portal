@@ -22,7 +22,7 @@ function DraggableColumn({ column, index, moveColumn, removeColumn }) {
     }
   });
   return (
-    <th ref={(node) => drag(drop(node))} className="px-3 py-2 border-b text-left text-sm font-medium text-gray-700 bg-gray-50">
+    <th ref={(node) => drag(drop(node))} className="px-3 py-2 border-b text-left text-sm font-medium text-gray-700 bg-gray-50 whitespace-nowrap">
       <div className="flex justify-between items-center">
         {column.label}
         {column.key !== 'resume' && (
@@ -252,7 +252,7 @@ export default function RequirementDetail() {
         <main className="max-w-7xl mx-auto px-4 py-10">
           <h1 className="text-2xl font-bold mb-6">Candidates for: {decodedRole}</h1>
 
-          <div className="flex flex-wrap items-center gap-3 mb-6">
+          <div className="flex flex-col sm:flex-row flex-wrap items-stretch sm:items-center gap-3 mb-6">
             <button onClick={addRow} className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded text-sm">
               Add Candidate
             </button>

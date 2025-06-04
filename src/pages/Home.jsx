@@ -11,7 +11,9 @@ export default function Home() {
 
   useEffect(() => {
     const unsub = onAuthStateChanged(auth, (user) => {
-      if (!user) navigate('/login');
+      if (!user) {
+        navigate('/login');
+      }
       setCheckingAuth(false);
     });
     return () => unsub();
@@ -20,37 +22,46 @@ export default function Home() {
   if (checkingAuth) return null;
 
   return (
-    <div className="min-h-screen bg-gray-50 text-gray-800">
+    <div className="min-h-screen bg-white text-gray-800">
       <Header />
-      <main className="max-w-3xl mx-auto px-6 py-24 text-center">
-        <h1 className="text-4xl font-bold text-indigo-700 mb-4">
-          Elevate Your Hiring Process
-        </h1>
-        <p className="text-lg text-gray-600 mb-10">
-          RecruitHub empowers modern hiring teams to organize roles, manage candidates, and drive decisions — all in one intuitive platform.
-        </p>
+      <main className="flex flex-col-reverse md:flex-row items-center justify-between max-w-7xl mx-auto px-6 py-20 gap-12">
+        {/* Text Content */}
+        <div className="flex-1">
+          <h1 className="text-4xl sm:text-5xl font-bold mb-6 leading-tight text-indigo-700">
+            Streamline Your <span className="text-black">Hiring Workflow</span>
+          </h1>
+          <p className="text-lg text-gray-600 mb-8 max-w-xl">
+            RecruitHub helps you manage job roles, track candidates, and collaborate with your hiring team — all in one place.
+          </p>
 
-        <div className="text-left text-sm text-gray-700 space-y-3 mb-12 max-w-md mx-auto">
-          <div className="flex items-start gap-2">
-            <span className="text-indigo-600 font-bold">▸</span>
-            <span>Structured role and candidate pipelines</span>
+          <div className="space-y-3 mb-6">
+            <div className="flex items-center gap-2">
+              ✅ <span>Customizable candidate pipeline</span>
+            </div>
+            <div className="flex items-center gap-2">
+              ✅ <span>Drag-and-drop resume management</span>
+            </div>
+            <div className="flex items-center gap-2">
+              ✅ <span>Role-based candidate tracking</span>
+            </div>
           </div>
-          <div className="flex items-start gap-2">
-            <span className="text-indigo-600 font-bold">▸</span>
-            <span>Collaborative workflow across your team</span>
-          </div>
-          <div className="flex items-start gap-2">
-            <span className="text-indigo-600 font-bold">▸</span>
-            <span>Centralized tracking, notes, and resumes</span>
-          </div>
+
+          <Link
+            to="/roles"
+            className="inline-block bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-3 rounded-lg text-base font-semibold transition"
+          >
+            Go to Roles
+          </Link>
         </div>
 
-        <Link
-          to="/roles"
-          className="inline-block bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-3 rounded-md text-sm font-medium shadow-sm transition"
-        >
-          Get Started
-        </Link>
+        {/* Image/Illustration */}
+        <div className="flex-1 w-full max-w-md">
+          <img
+            src="https://illustrations.popsy.co/gray/recruitment.svg"
+            alt="Recruitment illustration"
+            className="w-full h-auto"
+          />
+        </div>
       </main>
     </div>
   );

@@ -17,22 +17,24 @@ export default function Header() {
   };
 
   return (
-    <header className="w-full bg-white border-b shadow-sm px-6 py-3 flex items-center justify-between">
-      <h1 className="text-lg font-semibold text-gray-800">Recruitment Portal</h1>
-      <nav className="flex gap-4 text-sm">
-        <Link to="/" className="flex items-center gap-1 text-gray-600 hover:text-indigo-600">
-          <Home size={16} /> Home
-        </Link>
-        <Link to="/roles" className="flex items-center gap-1 text-gray-600 hover:text-indigo-600">
-          <Briefcase size={16} /> Roles
-        </Link>
-        <button
-          onClick={handleLogout}
-          className="flex items-center gap-1 text-gray-600 hover:text-red-500"
-        >
-          <LogOut size={16} /> Logout
-        </button>
-      </nav>
+    <header className="w-full bg-white border-b shadow-sm px-4 sm:px-6 py-3">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 sm:gap-0">
+        <h1 className="text-lg font-semibold text-gray-800">Recruitment Portal</h1>
+        <nav className="flex flex-col sm:flex-row gap-2 text-sm">
+          <Link to="/" className="flex items-center gap-1 text-gray-600 hover:text-indigo-600">
+            <Home size={16} /> Home
+          </Link>
+          <Link to="/roles" className="flex items-center gap-1 text-gray-600 hover:text-indigo-600">
+            <Briefcase size={16} /> Roles
+          </Link>
+          <button
+            onClick={handleLogout}
+            className="flex items-center gap-1 text-gray-600 hover:text-red-500"
+          >
+            <LogOut size={16} /> Logout
+          </button>
+        </nav>
+      </div>
     </header>
   );
 }

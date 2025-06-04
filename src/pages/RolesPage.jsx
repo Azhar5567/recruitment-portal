@@ -18,7 +18,6 @@ export default function RolesPage() {
   const [user, setUser] = useState(null);
   const navigate = useNavigate();
 
-  // ✅ Auth check + set user
   useEffect(() => {
     const unsub = onAuthStateChanged(auth, (currentUser) => {
       if (!currentUser) {
@@ -31,7 +30,6 @@ export default function RolesPage() {
     return () => unsub();
   }, [navigate]);
 
-  // ✅ Load roles for the logged-in user only
   useEffect(() => {
     if (!user) return;
 
@@ -51,7 +49,6 @@ export default function RolesPage() {
     return () => unsub();
   }, [user]);
 
-  // ➕ Add new role to Firestore under user
   const addRole = async () => {
     const trimmed = newRole.trim();
     if (trimmed && !roles.includes(trimmed)) {
@@ -75,9 +72,10 @@ export default function RolesPage() {
   return (
     <div className="min-h-screen bg-gray-50 text-gray-800">
       <Header />
-
-      <main className="max-w-xl mx-auto px-4 py-10">
-        <h2 className="text-2xl font-bold mb-6 text-center">Manage Your Job Roles</h2>
+      <main className="w-full max-w-2xl mx-auto px-4 py-10">
+        <h2 className="text-2xl sm:text-3xl font-bold mb-6 text-center">
+          Manage Your Job Roles
+        </h2>
 
         <div className="mb-6">
           <input
@@ -98,7 +96,7 @@ export default function RolesPage() {
 
         <h3 className="text-lg font-semibold mb-3">Your Roles</h3>
         {roles.length === 0 ? (
-          <p className="text-gray-500">No roles added yet. Use the form above to create one.</p>
+          <p className="text-gray-500 text-center">No roles added yet.</p>
         ) : (
           <ul className="space-y-2">
             {roles.sort().map((role) => (

@@ -55,7 +55,6 @@ export default function Login() {
 
   return (
     <div className="min-h-screen grid grid-cols-1 md:grid-cols-2 bg-gray-50">
-      {/* Left panel with info */}
       <div className="hidden md:flex flex-col justify-center bg-indigo-700 text-white px-10 py-20">
         <h1 className="text-4xl font-bold mb-4">Welcome to RecruitHub</h1>
         <p className="text-lg mb-6">
@@ -69,9 +68,8 @@ export default function Login() {
         </ul>
       </div>
 
-      {/* Right panel with form */}
       <div className="flex flex-col justify-center items-center px-6 py-12">
-        <div className="w-full max-w-md bg-white p-6 rounded-lg shadow">
+        <div className="w-full max-w-md bg-white p-6 rounded-lg shadow mx-4">
           <h2 className="text-2xl font-semibold mb-6 text-center">
             {isLogin ? 'Login to RecruitHub' : 'Sign Up for Free'}
           </h2>
