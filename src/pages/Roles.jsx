@@ -1,198 +1,140 @@
-// src/pages/RoleDetail.jsx
+// src/pages/Roles.jsx
 import { useState, useEffect } from 'react';
-import { useParams } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { onAuthStateChanged } from 'firebase/auth';
-import { db, auth } from '../firebase';
-import { doc, setDoc, getDoc } from 'firebase/firestore';
+import { collection, addDoc, onSnapshot, getDocs } from 'firebase/firestore';
+import { auth, db } from '../firebase';
 import Header from '../components/Header';
 
-export default function RoleDetail() {
-  const { roleId } = useParams();
-  const decodedRole = decodeURIComponent(roleId || 'Unknown');
-
+export default function Roles() {
+  const navigate = useNavigate();
   const [user, setUser] = useState(null);
-  const [candidates, setCandidates] = useState([]);
-  const [columns, setColumns] = useState([
-    { key: 'name', label: 'Name' },
-    { key: 'email', label: 'Email' },
-    { key: 'contact', label: 'Contact' },
-    { key: 'currentCompany', label: 'Current Company' },
-    { key: 'resume', label: 'Resume' },
-    { key: 'status', label: 'Status' },
-  ]);
-  const [newCandidate, setNewCandidate] = useState({});
-  const [statusOptions] = useState([
-    'Sourced', 'Shortlisted', 'Interview Scheduled', 'Interviewed',
-    'Selected', 'Rejected', 'Offered', 'Joined', 'Did Not Join'
-  ]);
-  const [saving, setSaving] = useState(false);
-  const [filter, setFilter] = useState('');
+  const [roles, setRoles] = useState([]);
+  const [newRole, setNewRole] = useState('');
+  const [searchTerm, setSearchTerm] = useState('');
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const unsub = onAuthStateChanged(auth, (currentUser) => {
-      if (currentUser) {
+      if (!currentUser) {
+        navigate('/login');
+      } else {
         setUser(currentUser);
       }
     });
     return () => unsub();
-  }, []);
+  }, [navigate]);
 
   useEffect(() => {
-    const fetchData = async () => {
-      if (!user) return;
-      const docRef = doc(db, 'users', user.uid, 'candidates', decodedRole);
-      const snapshot = await getDoc(docRef);
-      if (snapshot.exists()) {
-        const data = snapshot.data();
-        if (Array.isArray(data.candidates)) {
-          setCandidates(data.candidates);
-        }
-      }
-    };
-    fetchData();
-  }, [user, decodedRole]);
-
-  const handleChange = (i, key, value) => {
-    setCandidates(prev => {
-      const updated = [...prev];
-      updated[i][key] = value;
-      return updated;
-    });
-  };
-
-  const handleFileUpload = (i, file) => {
-    handleChange(i, 'resume', file?.name || '');
-  };
-
-  const addCandidate = () => {
-    const empty = {};
-    columns.forEach(col => {
-      empty[col.key] = '';
-    });
-    setCandidates(prev => [...prev, empty]);
-  };
-
-  const removeCandidate = (i) => {
-    if (!window.confirm('Remove this candidate?')) return;
-    setCandidates(prev => prev.filter((_, idx) => idx !== i));
-  };
-
-  const saveCandidates = async () => {
     if (!user) return;
-    setSaving(true);
+
+    const rolesRef = collection(db, 'users', user.uid, 'roles');
+    const unsub = onSnapshot(rolesRef, async (snapshot) => {
+      const fetchedRoles = [];
+      for (const docSnap of snapshot.docs) {
+        const data = docSnap.data();
+        const candidatesRef = collection(db, 'users', user.uid, 'candidates');
+        const candidateDocs = await getDocs(candidatesRef);
+        const matching = candidateDocs.docs.find(d => d.id === data.name);
+        const candidateCount = matching?.data()?.candidates?.length || 0;
+
+        fetchedRoles.push({
+          id: docSnap.id,
+          name: data.name,
+          status: data.status || 'Active',
+          candidateCount,
+        });
+      }
+      setRoles(fetchedRoles);
+      setLoading(false);
+    });
+
+    return () => unsub();
+  }, [user]);
+
+  const addRole = async () => {
+    const trimmed = newRole.trim();
+    if (!trimmed || roles.some(r => r.name === trimmed)) return;
+
     try {
-      const docRef = doc(db, 'users', user.uid, 'candidates', decodedRole);
-      await setDoc(docRef, {
-        candidates: candidates.map((c) => ({
-          ...c,
-          resume: typeof c.resume === 'string' ? c.resume : c.resume?.name || '',
-        })),
+      await addDoc(collection(db, 'users', user.uid, 'roles'), {
+        name: trimmed,
+        status: 'Active',
       });
-      setSaving(false);
-      alert('Candidates saved!');
+      setNewRole('');
     } catch (err) {
-      console.error('Save error:', err);
-      setSaving(false);
-      alert('Failed to save candidates.');
+      console.error('Error adding role:', err);
     }
   };
 
-  const filteredCandidates = candidates.filter((c) =>
-    Object.values(c).join(' ').toLowerCase().includes(filter.toLowerCase())
+  const filteredRoles = roles.filter((role) =>
+    role.name.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 text-gray-800">
       <Header />
-      <main className="max-w-7xl mx-auto px-4 py-10">
-        <div className="flex justify-between items-center mb-6">
-          <h1 className="text-2xl font-bold">Candidates for: {decodedRole}</h1>
-          <button
-            onClick={saveCandidates}
-            className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-md text-sm"
-          >
-            {saving ? 'Saving...' : 'Save Changes'}
-          </button>
-        </div>
+      <main className="w-full max-w-4xl mx-auto px-4 py-10">
+        <h2 className="text-2xl sm:text-3xl font-bold mb-6 text-center">
+          Your Job Roles
+        </h2>
 
-        <div className="flex flex-wrap items-center gap-3 mb-4">
+        <div className="mb-6 grid grid-cols-1 sm:grid-cols-3 gap-3">
           <input
             type="text"
-            value={filter}
-            onChange={(e) => setFilter(e.target.value)}
-            placeholder="Search candidates..."
-            className="border px-3 py-2 rounded w-full sm:w-64 text-sm"
+            value={newRole}
+            onChange={(e) => setNewRole(e.target.value)}
+            placeholder="New role name"
+            className="border px-4 py-2 rounded-md"
           />
           <button
-            onClick={addCandidate}
-            className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded text-sm"
+            onClick={addRole}
+            disabled={!newRole.trim()}
+            className="bg-indigo-600 hover:bg-indigo-700 text-white py-2 px-4 rounded-md transition disabled:opacity-40"
           >
-            Add Candidate
+            Add Role
           </button>
+          <input
+            type="text"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            placeholder="Search roles..."
+            className="border px-4 py-2 rounded-md"
+          />
         </div>
 
-        <div className="overflow-auto bg-white border rounded shadow">
-          <table className="min-w-full text-sm">
-            <thead>
-              <tr>
-                {columns.map((col) => (
-                  <th key={col.key} className="border px-3 py-2 bg-gray-100 text-left font-medium">
-                    {col.label}
-                  </th>
-                ))}
-                <th className="border px-3 py-2 bg-gray-100">Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filteredCandidates.map((candidate, i) => (
-                <tr key={i} className="hover:bg-gray-50">
-                  {columns.map((col) => (
-                    <td key={col.key} className="border px-3 py-2">
-                      {col.key === 'status' ? (
-                        <select
-                          value={candidate[col.key] || ''}
-                          onChange={(e) => handleChange(i, col.key, e.target.value)}
-                          className="border p-1 rounded w-full"
-                        >
-                          <option value="">Select...</option>
-                          {statusOptions.map(opt => (
-                            <option key={opt} value={opt}>{opt}</option>
-                          ))}
-                        </select>
-                      ) : col.key === 'resume' ? (
-                        <>
-                          <input
-                            type="file"
-                            onChange={(e) => handleFileUpload(i, e.target.files[0])}
-                            className="text-sm"
-                          />
-                          {candidate.resume && (
-                            <div className="text-xs mt-1 text-blue-600">{candidate.resume}</div>
-                          )}
-                        </>
-                      ) : (
-                        <input
-                          type="text"
-                          value={candidate[col.key] || ''}
-                          onChange={(e) => handleChange(i, col.key, e.target.value)}
-                          className="w-full border p-1 rounded"
-                        />
-                      )}
-                    </td>
-                  ))}
-                  <td className="border px-3 py-2 text-center">
-                    <button
-                      onClick={() => removeCandidate(i)}
-                      className="text-red-500 text-xs"
+        {loading ? (
+          <p className="text-center text-gray-500">Loading roles...</p>
+        ) : filteredRoles.length === 0 ? (
+          <p className="text-center text-gray-500">No roles found.</p>
+        ) : (
+          <ul className="space-y-4">
+            {filteredRoles.map((role) => (
+              <li key={role.name}>
+                <Link
+                  to={`/roles/${encodeURIComponent(role.name)}`}
+                  className="block p-4 border border-gray-200 rounded-lg hover:shadow-sm hover:bg-white transition"
+                >
+                  <div className="flex justify-between items-center">
+                    <h3 className="text-lg font-semibold">{role.name}</h3>
+                    <span
+                      className={`text-sm px-2 py-1 rounded-full ${
+                        role.status === 'Active'
+                          ? 'bg-green-100 text-green-800'
+                          : 'bg-gray-100 text-gray-600'
+                      }`}
                     >
-                      ✕
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+                      {role.status}
+                    </span>
+                  </div>
+                  <p className="text-sm text-gray-600 mt-1">
+                    {role.candidateCount} candidate{role.candidateCount !== 1 ? 's' : ''}
+                  </p>
+                </Link>
+              </li>
+            ))}
+          </ul>
+        )}
       </main>
     </div>
   );
