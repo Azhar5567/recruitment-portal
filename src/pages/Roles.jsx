@@ -1,139 +1,142 @@
 // src/pages/Roles.jsx
-import { useState, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { useEffect, useState } from 'react';
 import { onAuthStateChanged } from 'firebase/auth';
-import { collection, addDoc, onSnapshot, getDocs } from 'firebase/firestore';
+import { collection, addDoc, getDocs, deleteDoc, updateDoc, doc } from 'firebase/firestore';
+import { useNavigate } from 'react-router-dom';
 import { auth, db } from '../firebase';
 import Header from '../components/Header';
 
 export default function Roles() {
   const navigate = useNavigate();
   const [user, setUser] = useState(null);
+  const [roleName, setRoleName] = useState('');
   const [roles, setRoles] = useState([]);
-  const [newRole, setNewRole] = useState('');
-  const [searchTerm, setSearchTerm] = useState('');
-  const [loading, setLoading] = useState(true);
+  const [filter, setFilter] = useState('');
+
+  const statusColors = {
+    Active: 'bg-green-100 text-green-800',
+    Paused: 'bg-yellow-100 text-yellow-800',
+    Closed: 'bg-red-100 text-red-800'
+  };
 
   useEffect(() => {
     const unsub = onAuthStateChanged(auth, (currentUser) => {
-      if (!currentUser) {
-        navigate('/login');
-      } else {
-        setUser(currentUser);
-      }
+      if (currentUser) setUser(currentUser);
+      else navigate('/login');
     });
     return () => unsub();
   }, [navigate]);
 
   useEffect(() => {
-    if (!user) return;
-
-    const rolesRef = collection(db, 'users', user.uid, 'roles');
-    const unsub = onSnapshot(rolesRef, async (snapshot) => {
-      const fetchedRoles = [];
-      for (const docSnap of snapshot.docs) {
-        const data = docSnap.data();
-        const candidatesRef = collection(db, 'users', user.uid, 'candidates');
-        const candidateDocs = await getDocs(candidatesRef);
-        const matching = candidateDocs.docs.find(d => d.id === data.name);
-        const candidateCount = matching?.data()?.candidates?.length || 0;
-
-        fetchedRoles.push({
-          id: docSnap.id,
-          name: data.name,
-          status: data.status || 'Active',
-          candidateCount,
-        });
-      }
-      setRoles(fetchedRoles);
-      setLoading(false);
-    });
-
-    return () => unsub();
+    const fetchRoles = async () => {
+      if (!user) return;
+      const snapshot = await getDocs(collection(db, 'users', user.uid, 'roles'));
+      const data = snapshot.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data()
+      }));
+      setRoles(data);
+    };
+    fetchRoles();
   }, [user]);
 
   const addRole = async () => {
-    const trimmed = newRole.trim();
-    if (!trimmed || roles.some(r => r.name === trimmed)) return;
-
-    try {
-      await addDoc(collection(db, 'users', user.uid, 'roles'), {
-        name: trimmed,
-        status: 'Active',
-      });
-      setNewRole('');
-    } catch (err) {
-      console.error('Error adding role:', err);
-    }
+    const name = roleName.trim();
+    if (!name || !user) return;
+    const ref = await addDoc(collection(db, 'users', user.uid, 'roles'), {
+      name,
+      status: 'Active'
+    });
+    setRoleName('');
+    setRoles(prev => [...prev, { id: ref.id, name, status: 'Active' }]);
   };
 
-  const filteredRoles = roles.filter((role) =>
-    role.name.toLowerCase().includes(searchTerm.toLowerCase())
+  const deleteRole = async (id) => {
+    if (!window.confirm('Are you sure you want to delete this role?')) return;
+    await deleteDoc(doc(db, 'users', user.uid, 'roles', id));
+    setRoles(prev => prev.filter(r => r.id !== id));
+  };
+
+  const updateStatus = async (id, newStatus) => {
+    await updateDoc(doc(db, 'users', user.uid, 'roles', id), { status: newStatus });
+    setRoles(prev =>
+      prev.map(r => r.id === id ? { ...r, status: newStatus } : r)
+    );
+  };
+
+  const filteredRoles = roles.filter(r =>
+    r.name.toLowerCase().includes(filter.toLowerCase())
   );
 
   return (
-    <div className="min-h-screen bg-gray-50 text-gray-800">
+    <div className="min-h-screen bg-white text-gray-800">
       <Header />
-      <main className="w-full max-w-4xl mx-auto px-4 py-10">
-        <h2 className="text-2xl sm:text-3xl font-bold mb-6 text-center">
-          Your Job Roles
-        </h2>
+      <main className="max-w-3xl mx-auto px-4 py-10">
+        <h1 className="text-3xl font-bold mb-8">Your Job Roles</h1>
 
-        <div className="mb-6 grid grid-cols-1 sm:grid-cols-3 gap-3">
+        <div className="flex flex-wrap gap-3 mb-6">
           <input
-            type="text"
-            value={newRole}
-            onChange={(e) => setNewRole(e.target.value)}
+            value={roleName}
+            onChange={(e) => setRoleName(e.target.value)}
             placeholder="New role name"
-            className="border px-4 py-2 rounded-md"
+            className="border px-3 py-2 rounded w-full sm:w-60"
           />
           <button
             onClick={addRole}
-            disabled={!newRole.trim()}
-            className="bg-indigo-600 hover:bg-indigo-700 text-white py-2 px-4 rounded-md transition disabled:opacity-40"
+            className="bg-purple-500 hover:bg-purple-600 text-white px-5 py-2 rounded text-sm"
           >
             Add Role
           </button>
           <input
-            type="text"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
+            value={filter}
+            onChange={(e) => setFilter(e.target.value)}
             placeholder="Search roles..."
-            className="border px-4 py-2 rounded-md"
+            className="border px-3 py-2 rounded w-full sm:w-60"
           />
         </div>
 
-        {loading ? (
-          <p className="text-center text-gray-500">Loading roles...</p>
-        ) : filteredRoles.length === 0 ? (
-          <p className="text-center text-gray-500">No roles found.</p>
+        {filteredRoles.length === 0 ? (
+          <p className="text-gray-500 text-sm">No roles found.</p>
         ) : (
-          <ul className="space-y-4">
+          <div className="space-y-4">
             {filteredRoles.map((role) => (
-              <li key={role.name}>
-                <Link
-                  to={`/roles/${encodeURIComponent(role.name)}`}
-                  className="block p-4 border border-gray-200 rounded-lg hover:shadow-sm hover:bg-white transition"
+              <div
+                key={role.id}
+                className="flex items-center justify-between border rounded px-4 py-3 shadow-sm hover:bg-gray-50"
+              >
+                <div
+                  onClick={() => navigate(`/roles/${encodeURIComponent(role.name)}`)}
+                  className="cursor-pointer flex-1"
                 >
-                  <div className="flex justify-between items-center">
-                    <h3 className="text-lg font-semibold">{role.name}</h3>
-                    <span
-                      className={`text-sm px-2 py-1 rounded-full ${
-                        role.status === 'Active'
-                          ? 'bg-green-100 text-green-800'
-                          : 'bg-gray-100 text-gray-600'
-                      }`}
-                    >
-                      {role.status}
-                    </span>
-                  </div>
-                  <p className="text-sm text-gray-600 mt-1">
-                    {role.candidateCount} candidate{role.candidateCount !== 1 ? 's' : ''}
+                  <p className="font-medium text-lg">{role.name}</p>
+                  <p className="text-xs text-gray-500">
+                    {
+                      role.status === 'Closed'
+                        ? 'This role is closed.'
+                        : 'Click to view candidates'
+                    }
                   </p>
-                </Link>
-              </li>
+                </div>
+
+                <select
+                  value={role.status}
+                  onChange={(e) => updateStatus(role.id, e.target.value)}
+                  className={`text-xs px-2 py-1 rounded font-semibold border ${statusColors[role.status] || 'bg-gray-100'}`}
+                >
+                  <option value="Active">Active</option>
+                  <option value="Paused">Paused</option>
+                  <option value="Closed">Closed</option>
+                </select>
+
+                <button
+                  onClick={() => deleteRole(role.id)}
+                  className="ml-3 text-red-600 text-sm hover:underline"
+                >
+                  Delete
+                </button>
+              </div>
             ))}
-          </ul>
+          </div>
         )}
       </main>
     </div>

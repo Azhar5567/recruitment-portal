@@ -2,7 +2,7 @@
 import { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { onAuthStateChanged } from 'firebase/auth';
-import { db, auth } from '../firebase';
+import { auth, db } from '../firebase';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
 import Header from '../components/Header';
 
@@ -15,15 +15,6 @@ export default function RoleDetail() {
   const [filter, setFilter] = useState('');
   const [saving, setSaving] = useState(false);
 
-  const columns = [
-    { key: 'name', label: 'Name' },
-    { key: 'email', label: 'Email' },
-    { key: 'contact', label: 'Contact' },
-    { key: 'currentCompany', label: 'Current Company' },
-    { key: 'resume', label: 'Resume' },
-    { key: 'status', label: 'Status' }
-  ];
-
   const statusOptions = [
     'Sourced', 'Shortlisted', 'Interview Scheduled', 'Interviewed',
     'Selected', 'Rejected', 'Offered', 'Joined', 'Did Not Join'
@@ -31,9 +22,7 @@ export default function RoleDetail() {
 
   useEffect(() => {
     const unsub = onAuthStateChanged(auth, (currentUser) => {
-      if (currentUser) {
-        setUser(currentUser);
-      }
+      if (currentUser) setUser(currentUser);
     });
     return () => unsub();
   }, []);
@@ -56,8 +45,14 @@ export default function RoleDetail() {
   }, [user, decodedRole]);
 
   const addCandidate = () => {
-    const newCandidate = {};
-    columns.forEach(col => newCandidate[col.key] = '');
+    const newCandidate = {
+      name: '',
+      email: '',
+      contact: '',
+      currentCompany: '',
+      resume: '',
+      status: ''
+    };
     setCandidates(prev => [...prev, newCandidate]);
   };
 
@@ -98,79 +93,120 @@ export default function RoleDetail() {
       <Header />
       <main className="max-w-6xl mx-auto px-4 py-10">
         <div className="flex justify-between items-center mb-6">
-          <h1 className="text-2xl font-bold">Candidates for: {decodedRole || '...'}</h1>
+          <h1 className="text-2xl font-bold">Candidates for: {decodedRole}</h1>
           <button
             onClick={saveCandidates}
-            className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded text-sm"
+            className="bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded text-sm"
           >
             {saving ? 'Saving...' : 'Save Changes'}
           </button>
         </div>
 
-        <div className="flex flex-wrap gap-3 mb-4">
+        <div className="flex flex-wrap gap-3 mb-6">
           <input
             value={filter}
             onChange={(e) => setFilter(e.target.value)}
-            placeholder="Search candidates..."
-            className="border px-3 py-2 rounded text-sm w-full sm:w-64"
+            placeholder="Search by name, email, etc."
+            className="border px-4 py-2 rounded w-full sm:w-64 text-sm"
           />
           <button
             onClick={addCandidate}
-            className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded text-sm"
+            className="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-2 rounded text-sm"
           >
             Add Candidate
           </button>
         </div>
 
-        <div className="overflow-auto bg-white border rounded shadow">
-          <table className="min-w-full text-sm">
-            <thead className="bg-gray-100">
-              <tr>
-                {columns.map(col => (
-                  <th key={col.key} className="px-3 py-2 border text-left font-medium">{col.label}</th>
-                ))}
-                <th className="px-3 py-2 border">Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filteredCandidates.map((candidate, i) => (
-                <tr key={i} className="hover:bg-gray-50">
-                  {columns.map(col => (
-                    <td key={col.key} className="px-3 py-2 border">
-                      {col.key === 'status' ? (
-                        <select
-                          value={candidate[col.key] || ''}
-                          onChange={(e) => updateCandidate(i, col.key, e.target.value)}
-                          className="w-full border rounded p-1"
-                        >
-                          <option value="">Select</option>
-                          {statusOptions.map(opt => (
-                            <option key={opt} value={opt}>{opt}</option>
-                          ))}
-                        </select>
-                      ) : (
-                        <input
-                          type="text"
-                          value={candidate[col.key] || ''}
-                          onChange={(e) => updateCandidate(i, col.key, e.target.value)}
-                          className="w-full border rounded p-1"
-                        />
-                      )}
-                    </td>
-                  ))}
-                  <td className="px-3 py-2 border text-center">
-                    <button
-                      onClick={() => removeCandidate(i)}
-                      className="text-red-500 text-sm"
-                    >
-                      ✕
-                    </button>
-                  </td>
+        {filteredCandidates.length === 0 ? (
+          <p className="text-center text-gray-500">No candidates yet.</p>
+        ) : (
+          <div className="overflow-x-auto bg-white border rounded shadow">
+            <table className="min-w-full text-sm">
+              <thead className="bg-gray-100">
+                <tr>
+                  <th className="text-left p-3 border">Name</th>
+                  <th className="text-left p-3 border">Email</th>
+                  <th className="text-left p-3 border">Contact</th>
+                  <th className="text-left p-3 border">Current Company</th>
+                  <th className="text-left p-3 border">Resume</th>
+                  <th className="text-left p-3 border">Status</th>
+                  <th className="text-center p-3 border">Actions</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+              </thead>
+              <tbody>
+                {filteredCandidates.map((c, i) => (
+                  <tr key={i} className="hover:bg-gray-50">
+                    <td className="border px-3 py-2">
+                      <input
+                        type="text"
+                        value={c.name}
+                        onChange={(e) => updateCandidate(i, 'name', e.target.value)}
+                        placeholder="John Doe"
+                        className="w-full border rounded px-2 py-1"
+                      />
+                    </td>
+                    <td className="border px-3 py-2">
+                      <input
+                        type="email"
+                        value={c.email}
+                        onChange={(e) => updateCandidate(i, 'email', e.target.value)}
+                        placeholder="email@example.com"
+                        className="w-full border rounded px-2 py-1"
+                      />
+                    </td>
+                    <td className="border px-3 py-2">
+                      <input
+                        type="text"
+                        value={c.contact}
+                        onChange={(e) => updateCandidate(i, 'contact', e.target.value)}
+                        placeholder="Phone or LinkedIn"
+                        className="w-full border rounded px-2 py-1"
+                      />
+                    </td>
+                    <td className="border px-3 py-2">
+                      <input
+                        type="text"
+                        value={c.currentCompany}
+                        onChange={(e) => updateCandidate(i, 'currentCompany', e.target.value)}
+                        placeholder="Current Employer"
+                        className="w-full border rounded px-2 py-1"
+                      />
+                    </td>
+                    <td className="border px-3 py-2">
+                      <input
+                        type="text"
+                        value={c.resume}
+                        onChange={(e) => updateCandidate(i, 'resume', e.target.value)}
+                        placeholder="Filename or link"
+                        className="w-full border rounded px-2 py-1"
+                      />
+                    </td>
+                    <td className="border px-3 py-2">
+                      <select
+                        value={c.status}
+                        onChange={(e) => updateCandidate(i, 'status', e.target.value)}
+                        className="w-full border rounded px-2 py-1"
+                      >
+                        <option value="">Select</option>
+                        {statusOptions.map((opt) => (
+                          <option key={opt} value={opt}>{opt}</option>
+                        ))}
+                      </select>
+                    </td>
+                    <td className="border px-3 py-2 text-center">
+                      <button
+                        onClick={() => removeCandidate(i)}
+                        className="text-red-500 text-xs"
+                      >
+                        ✕
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
       </main>
     </div>
   );
