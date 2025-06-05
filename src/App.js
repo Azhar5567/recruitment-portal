@@ -3,6 +3,9 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 
 import Landing from './pages/Landing';
 import Login from './pages/Login';
+import Register from './pages/Register';
+import ResetPassword from './pages/ResetPassword';
+
 import Dashboard from './pages/Dashboard';
 import Roles from './pages/Roles';
 import RoleDetail from './pages/RoleDetail';
@@ -33,13 +36,13 @@ function App() {
   return (
     <Router>
       <Routes>
-        {/* Public Landing Page */}
+        {/* Public Pages */}
         <Route path="/" element={<Landing />} />
-
-        {/* Auth Page */}
         <Route path="/login" element={<Login />} />
+        <Route path="/register" element={<Register />} />
+        <Route path="/reset-password" element={<ResetPassword />} />
 
-        {/* Protected Pages (after login) */}
+        {/* Protected Pages */}
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/roles" element={<Roles />} />
         <Route path="/roles/:roleId" element={<RoleDetail />} />
@@ -49,7 +52,7 @@ function App() {
         <Route path="/settings" element={<Settings />} />
         <Route path="/help" element={<Help />} />
 
-        {/* Catch-all for unknown routes */}
+        {/* 404 Page */}
         <Route path="*" element={<NotFound />} />
       </Routes>
     </Router>
