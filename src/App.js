@@ -7,7 +7,7 @@ import Login from './pages/Login';
 import Register from './pages/Register';
 import ResetPassword from './pages/ResetPassword';
 
-// Core user pages
+// Main pages
 import Dashboard from './pages/Dashboard';
 import Roles from './pages/Roles';
 import RoleDetail from './pages/RoleDetail';
@@ -17,6 +17,11 @@ import Team from './pages/Team';
 import Settings from './pages/Settings';
 import Help from './pages/Help';
 import Clients from './pages/Clients';
+
+// New pages you just added
+import CreateJob from './pages/CreateJob';
+import CreateClient from './pages/CreateClient';
+import CreateCandidate from './pages/CreateCandidate';
 
 function NotFound() {
   return (
@@ -39,13 +44,13 @@ function App() {
   return (
     <Router>
       <Routes>
-        {/* Public Access */}
+        {/* Public Routes */}
         <Route path="/" element={<Landing />} />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
         <Route path="/reset-password" element={<ResetPassword />} />
 
-        {/* Authenticated Pages */}
+        {/* Core App Routes */}
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/roles" element={<Roles />} />
         <Route path="/roles/:roleName" element={<RoleDetail />} />
@@ -57,7 +62,12 @@ function App() {
         <Route path="/settings" element={<Settings />} />
         <Route path="/help" element={<Help />} />
 
-        {/* Fallback route */}
+        {/* New Pages */}
+        <Route path="/create-job" element={<CreateJob />} />
+        <Route path="/create-client" element={<CreateClient />} />
+        <Route path="/create-candidate" element={<CreateCandidate />} />
+
+        {/* Fallback */}
         <Route path="*" element={<NotFound />} />
       </Routes>
     </Router>
