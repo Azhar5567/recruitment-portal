@@ -6,11 +6,19 @@ export default function Landing() {
 
   return (
     <div className="min-h-screen bg-white flex flex-col text-gray-800">
+      {/* Header */}
       <header className="border-b px-6 py-4 flex justify-between items-center">
         <h1 className="text-xl font-bold text-indigo-600">Recruitment Portal</h1>
         <div className="space-x-4 text-sm">
-          <button onClick={() => navigate('/login')} className="text-indigo-600 hover:underline">Login</button>
           <button
+            type="button"
+            onClick={() => navigate('/login')}
+            className="text-indigo-600 hover:underline"
+          >
+            Login
+          </button>
+          <button
+            type="button"
             onClick={() => navigate('/login')}
             className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded"
           >
@@ -19,10 +27,12 @@ export default function Landing() {
         </div>
       </header>
 
+      {/* Hero Section */}
       <main className="flex-1 px-6 py-16 max-w-4xl mx-auto text-center">
         <h2 className="text-4xl font-bold mb-4">The Smartest Way to Hire</h2>
         <p className="text-lg text-gray-600 mb-8">
-          Manage job roles, track candidates, collaborate with your team, and hire faster — all in one powerful dashboard.
+          Manage job roles, track candidates, collaborate with your team, and hire faster —
+          all in one powerful dashboard.
         </p>
 
         <div className="flex flex-col sm:flex-row justify-center gap-4 mb-12">
@@ -56,6 +66,7 @@ export default function Landing() {
         </div>
       </main>
 
+      {/* Pricing Section */}
       <footer className="bg-gray-100 py-10 text-center text-sm text-gray-500">
         <h4 className="text-lg font-semibold mb-3">Pricing Plans</h4>
         <div className="max-w-xl mx-auto flex flex-col sm:flex-row justify-center gap-6 text-left">
