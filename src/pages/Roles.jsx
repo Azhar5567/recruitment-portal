@@ -108,7 +108,7 @@ export default function Roles() {
   const filteredRoles = roles
     .filter(r =>
       r.name.toLowerCase().includes(filter.toLowerCase()) &&
-      r.company.toLowerCase().includes(companyFilter.toLowerCase()) &&
+      (r.company || '').toLowerCase().includes(companyFilter.toLowerCase()) &&
       (statusTab === 'All' || r.status === statusTab)
     )
     .sort((a, b) => b.createdAt - a.createdAt);
@@ -116,63 +116,65 @@ export default function Roles() {
   return (
     <div className="min-h-screen bg-white text-gray-800">
       <Header />
-      <main className="max-w-3xl mx-auto px-4 py-10">
+      <main className="max-w-4xl mx-auto px-4 py-10">
         <h1 className="text-3xl font-bold mb-8">Your Job Roles</h1>
 
-        <div className="flex flex-wrap gap-3 mb-6">
+        {/* Add Role Form */}
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
           <input
             value={roleName}
             onChange={(e) => setRoleName(e.target.value)}
             placeholder="Role title"
-            className="border px-3 py-2 rounded w-full sm:w-64"
+            className="border px-3 py-2 rounded w-full"
           />
           <input
             value={companyName}
             onChange={(e) => setCompanyName(e.target.value)}
             placeholder="Company name"
-            className="border px-3 py-2 rounded w-full sm:w-64"
+            className="border px-3 py-2 rounded w-full"
           />
           <button
             onClick={addRole}
-            className="bg-purple-600 hover:bg-purple-700 text-white px-5 py-2 rounded text-sm"
+            className="bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2 rounded text-sm"
           >
             Add Role
           </button>
         </div>
 
-        <div className="flex flex-wrap gap-3 mb-6">
+        {/* Filters */}
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
           <input
             value={filter}
             onChange={(e) => setFilter(e.target.value)}
             placeholder="Search by role name"
-            className="border px-3 py-2 rounded w-full sm:w-64"
+            className="border px-3 py-2 rounded w-full"
           />
           <input
             value={companyFilter}
             onChange={(e) => setCompanyFilter(e.target.value)}
             placeholder="Filter by company"
-            className="border px-3 py-2 rounded w-full sm:w-64"
+            className="border px-3 py-2 rounded w-full"
           />
+          <div className="flex gap-2 text-sm">
+            {['All', 'Active', 'Paused', 'Closed'].map((status) => (
+              <button
+                key={status}
+                onClick={() => setStatusTab(status)}
+                className={`px-3 py-1 rounded-full border ${
+                  statusTab === status ? 'bg-indigo-600 text-white' : 'bg-gray-100 text-gray-700'
+                }`}
+              >
+                {status}
+              </button>
+            ))}
+          </div>
         </div>
 
-        <div className="flex gap-3 mb-4 text-sm">
-          {['All', 'Active', 'Paused', 'Closed'].map((status) => (
-            <button
-              key={status}
-              onClick={() => setStatusTab(status)}
-              className={`px-3 py-1 rounded-full border ${
-                statusTab === status ? 'bg-indigo-600 text-white' : 'bg-gray-100 text-gray-700'
-              }`}
-            >
-              {status}
-            </button>
-          ))}
-        </div>
-
+        {/* Role List */}
         {filteredRoles.length === 0 ? (
           <div className="text-center text-gray-500 mt-12">
             <p>No roles found.</p>
-            <p className="text-xs mt-1">Try a different status, company or search.</p>
+            <p className="text-xs mt-1">Try a different filter or company name.</p>
           </div>
         ) : (
           <div className="space-y-4">
@@ -185,8 +187,8 @@ export default function Roles() {
                   onClick={() => navigate(`/roles/${encodeURIComponent(role.name)}`)}
                   className="cursor-pointer flex-1"
                 >
-                  <p className="font-medium text-lg">{role.name}</p>
-                  <p className="text-sm text-gray-600">Company: {role.company}</p>
+                  <p className="font-semibold text-lg">{role.name}</p>
+                  <p className="text-sm text-gray-600">Company: {role.company || 'N/A'}</p>
                   <p className="text-xs text-gray-500">
                     {candidates[role.name] || 0} candidate{(candidates[role.name] || 0) !== 1 && 's'}
                   </p>
@@ -213,6 +215,7 @@ export default function Roles() {
           </div>
         )}
 
+        {/* Upgrade Modal */}
         {showUpgrade && <UpgradeWithPaypal onClose={() => setShowUpgrade(false)} />}
       </main>
     </div>
