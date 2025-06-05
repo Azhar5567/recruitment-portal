@@ -1,49 +1,59 @@
 // src/components/Header.jsx
-import { Link, useNavigate } from 'react-router-dom';
-import { Home, Briefcase, BarChart2, Settings, Users, HelpCircle, LogOut } from 'lucide-react';
-import { signOut } from 'firebase/auth';
+import { useEffect, useState } from 'react';
+import { onAuthStateChanged, signOut } from 'firebase/auth';
+import { useNavigate } from 'react-router-dom';
 import { auth } from '../firebase';
+import { Home, LogOut, Briefcase, BarChart2, Users, Settings as SettingsIcon, HelpCircle } from 'lucide-react';
 
 export default function Header() {
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
   const navigate = useNavigate();
 
-  const handleLogout = async () => {
-    try {
-      await signOut(auth);
+  useEffect(() => {
+    const unsub = onAuthStateChanged(auth, (user) => {
+      setIsLoggedIn(!!user);
+    });
+    return () => unsub();
+  }, []);
+
+  const handleLogout = () => {
+    signOut(auth).then(() => {
       navigate('/login');
-    } catch (err) {
-      console.error('Error signing out:', err);
-    }
+    });
   };
 
-  const navLink = (to, icon, label) => (
-    <Link
-      to={to}
-      className="flex items-center gap-1 px-3 py-2 rounded hover:bg-gray-100 text-gray-700 text-sm"
-    >
-      {icon} {label}
-    </Link>
-  );
-
   return (
-    <header className="w-full bg-white border-b shadow-sm px-4 sm:px-6 py-3 sticky top-0 z-10">
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between">
-        <h1 className="text-lg font-bold text-indigo-700">Recruitment Portal</h1>
-        <nav className="flex flex-wrap gap-2 mt-2 sm:mt-0">
-          {navLink('/', <Home size={16} />, 'Dashboard')}
-          {navLink('/roles', <Briefcase size={16} />, 'Roles')}
-          {navLink('/reports', <BarChart2 size={16} />, 'Reports')}
-          {navLink('/team', <Users size={16} />, 'Team')}
-          {navLink('/settings', <Settings size={16} />, 'Settings')}
-          {navLink('/help', <HelpCircle size={16} />, 'Help')}
+    <header className="flex items-center justify-between px-6 py-4 border-b bg-white">
+      <h1 className="text-xl font-bold text-indigo-600">Recruitment Portal</h1>
+      
+      {isLoggedIn && (
+        <nav className="space-x-4 text-sm flex items-center">
+          <a href="/dashboard" className="hover:underline flex items-center gap-1 text-gray-700">
+            <Home size={16} /> Dashboard
+          </a>
+          <a href="/roles" className="hover:underline flex items-center gap-1 text-gray-700">
+            <Briefcase size={16} /> Roles
+          </a>
+          <a href="/reports" className="hover:underline flex items-center gap-1 text-gray-700">
+            <BarChart2 size={16} /> Reports
+          </a>
+          <a href="/team" className="hover:underline flex items-center gap-1 text-gray-700">
+            <Users size={16} /> Team
+          </a>
+          <a href="/settings" className="hover:underline flex items-center gap-1 text-gray-700">
+            <SettingsIcon size={16} /> Settings
+          </a>
+          <a href="/help" className="hover:underline flex items-center gap-1 text-gray-700">
+            <HelpCircle size={16} /> Help
+          </a>
           <button
             onClick={handleLogout}
-            className="flex items-center gap-1 px-3 py-2 rounded hover:bg-red-100 text-red-600 text-sm"
+            className="flex items-center gap-1 text-red-600 hover:underline"
           >
             <LogOut size={16} /> Logout
           </button>
         </nav>
-      </div>
+      )}
     </header>
   );
 }
