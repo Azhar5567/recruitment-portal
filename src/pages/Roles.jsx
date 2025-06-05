@@ -1,17 +1,24 @@
 // src/pages/Roles.jsx
 import { useEffect, useState } from 'react';
 import { onAuthStateChanged } from 'firebase/auth';
-import { collection, addDoc, getDocs, deleteDoc, updateDoc, doc } from 'firebase/firestore';
+import {
+  collection, addDoc, getDocs, deleteDoc, updateDoc, doc, getDoc
+} from 'firebase/firestore';
 import { useNavigate } from 'react-router-dom';
 import { auth, db } from '../firebase';
 import Header from '../components/Header';
+import UpgradeWithPaypal from '../components/UpgradeWithPaypal';
 
 export default function Roles() {
   const navigate = useNavigate();
   const [user, setUser] = useState(null);
+  const [isPaid, setIsPaid] = useState(false);
   const [roleName, setRoleName] = useState('');
   const [roles, setRoles] = useState([]);
+  const [candidates, setCandidates] = useState({});
   const [filter, setFilter] = useState('');
+  const [statusTab, setStatusTab] = useState('All');
+  const [showUpgrade, setShowUpgrade] = useState(false);
 
   const statusColors = {
     Active: 'bg-green-100 text-green-800',
@@ -20,33 +27,55 @@ export default function Roles() {
   };
 
   useEffect(() => {
-    const unsub = onAuthStateChanged(auth, (currentUser) => {
-      if (currentUser) setUser(currentUser);
-      else navigate('/login');
+    const unsub = onAuthStateChanged(auth, async (currentUser) => {
+      if (currentUser) {
+        setUser(currentUser);
+        const snap = await getDoc(doc(db, 'users', currentUser.uid));
+        setIsPaid(snap.data()?.isPaid || false);
+      } else {
+        navigate('/login');
+      }
     });
     return () => unsub();
   }, [navigate]);
 
   useEffect(() => {
-    const fetchRoles = async () => {
+    const fetchData = async () => {
       if (!user) return;
-      const snapshot = await getDocs(collection(db, 'users', user.uid, 'roles'));
-      const data = snapshot.docs.map((doc) => ({
-        id: doc.id,
-        ...doc.data()
-      }));
-      setRoles(data);
+
+      const roleSnap = await getDocs(collection(db, 'users', user.uid, 'roles'));
+      const roleList = roleSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      setRoles(roleList);
+
+      const candidateSnap = await getDocs(collection(db, 'users', user.uid, 'candidates'));
+      const candidateCounts = {};
+      candidateSnap.forEach(doc => {
+        const data = doc.data();
+        candidateCounts[doc.id] = (data.candidates || []).length;
+      });
+      setCandidates(candidateCounts);
     };
-    fetchRoles();
+
+    fetchData();
   }, [user]);
 
   const addRole = async () => {
     const name = roleName.trim();
     if (!name || !user) return;
+
+    const freeLimit = 3;
+    const activeRoles = roles.filter(r => r.status !== 'Closed');
+
+    if (!isPaid && activeRoles.length >= freeLimit) {
+      setShowUpgrade(true);
+      return;
+    }
+
     const ref = await addDoc(collection(db, 'users', user.uid, 'roles'), {
       name,
       status: 'Active'
     });
+
     setRoleName('');
     setRoles(prev => [...prev, { id: ref.id, name, status: 'Active' }]);
   };
@@ -64,9 +93,12 @@ export default function Roles() {
     );
   };
 
-  const filteredRoles = roles.filter(r =>
-    r.name.toLowerCase().includes(filter.toLowerCase())
-  );
+  const filteredRoles = roles
+    .filter(r =>
+      r.name.toLowerCase().includes(filter.toLowerCase()) &&
+      (statusTab === 'All' || r.status === statusTab)
+    )
+    .sort((a, b) => a.name.localeCompare(b.name));
 
   return (
     <div className="min-h-screen bg-white text-gray-800">
@@ -79,11 +111,11 @@ export default function Roles() {
             value={roleName}
             onChange={(e) => setRoleName(e.target.value)}
             placeholder="New role name"
-            className="border px-3 py-2 rounded w-full sm:w-60"
+            className="border px-3 py-2 rounded w-full sm:w-64"
           />
           <button
             onClick={addRole}
-            className="bg-purple-500 hover:bg-purple-600 text-white px-5 py-2 rounded text-sm"
+            className="bg-purple-600 hover:bg-purple-700 text-white px-5 py-2 rounded text-sm"
           >
             Add Role
           </button>
@@ -91,12 +123,29 @@ export default function Roles() {
             value={filter}
             onChange={(e) => setFilter(e.target.value)}
             placeholder="Search roles..."
-            className="border px-3 py-2 rounded w-full sm:w-60"
+            className="border px-3 py-2 rounded w-full sm:w-64"
           />
         </div>
 
+        <div className="flex gap-3 mb-4 text-sm">
+          {['All', 'Active', 'Paused', 'Closed'].map((status) => (
+            <button
+              key={status}
+              onClick={() => setStatusTab(status)}
+              className={`px-3 py-1 rounded-full border ${
+                statusTab === status ? 'bg-indigo-600 text-white' : 'bg-gray-100 text-gray-700'
+              }`}
+            >
+              {status}
+            </button>
+          ))}
+        </div>
+
         {filteredRoles.length === 0 ? (
-          <p className="text-gray-500 text-sm">No roles found.</p>
+          <div className="text-center text-gray-500 mt-12">
+            <p>No roles found.</p>
+            <p className="text-xs mt-1">Try a different status or search.</p>
+          </div>
         ) : (
           <div className="space-y-4">
             {filteredRoles.map((role) => (
@@ -110,11 +159,7 @@ export default function Roles() {
                 >
                   <p className="font-medium text-lg">{role.name}</p>
                   <p className="text-xs text-gray-500">
-                    {
-                      role.status === 'Closed'
-                        ? 'This role is closed.'
-                        : 'Click to view candidates'
-                    }
+                    {candidates[role.name] || 0} candidate{(candidates[role.name] || 0) !== 1 && 's'}
                   </p>
                 </div>
 
@@ -138,6 +183,8 @@ export default function Roles() {
             ))}
           </div>
         )}
+
+        {showUpgrade && <UpgradeWithPaypal onClose={() => setShowUpgrade(false)} />}
       </main>
     </div>
   );

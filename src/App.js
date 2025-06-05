@@ -1,8 +1,9 @@
 // src/App.js
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 
-import Dashboard from './pages/Dashboard';
+import Landing from './pages/Landing';
 import Login from './pages/Login';
+import Dashboard from './pages/Dashboard';
 import Roles from './pages/Roles';
 import RoleDetail from './pages/RoleDetail';
 import CandidateDetail from './pages/CandidateDetail';
@@ -21,7 +22,7 @@ function NotFound() {
           href="/"
           className="mt-4 inline-block bg-indigo-600 text-white px-6 py-2 rounded hover:bg-indigo-700"
         >
-          Go to Dashboard
+          Go Home
         </a>
       </div>
     </div>
@@ -32,9 +33,14 @@ function App() {
   return (
     <Router>
       <Routes>
-        {/* Core Routes */}
-        <Route path="/" element={<Dashboard />} />
+        {/* Public Landing Page */}
+        <Route path="/" element={<Landing />} />
+
+        {/* Auth Page */}
         <Route path="/login" element={<Login />} />
+
+        {/* Protected Pages (after login) */}
+        <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/roles" element={<Roles />} />
         <Route path="/roles/:roleId" element={<RoleDetail />} />
         <Route path="/candidates/:candidateId" element={<CandidateDetail />} />
@@ -43,7 +49,7 @@ function App() {
         <Route path="/settings" element={<Settings />} />
         <Route path="/help" element={<Help />} />
 
-        {/* 404 Fallback */}
+        {/* Catch-all for unknown routes */}
         <Route path="*" element={<NotFound />} />
       </Routes>
     </Router>
