@@ -1,4 +1,4 @@
-// src/pages/Dashboard.jsx
+// src/pages/Dashboard.jsx (Updated as requested)
 import { useEffect, useState } from 'react';
 import { auth, db } from '../firebase';
 import { onAuthStateChanged } from 'firebase/auth';
@@ -10,7 +10,6 @@ export default function Dashboard() {
   const [user, setUser] = useState(null);
   const [roles, setRoles] = useState([]);
   const [candidates, setCandidates] = useState([]);
-  const [showCalendar, setShowCalendar] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -19,7 +18,7 @@ export default function Dashboard() {
         navigate('/login');
       } else {
         setUser(currentUser);
-        const roleSnap = await getDocs(collection(db, 'users', currentUser.uid, 'roles'));
+        const roleSnap = await getDocs(collection(db, 'users', currentUser.uid, 'jobs'));
         const roleList = roleSnap.docs.map(doc => doc.data());
         setRoles(roleList);
 
@@ -32,7 +31,6 @@ export default function Dashboard() {
     return () => unsub();
   }, [navigate]);
 
-  // Derived Metrics
   const openJobs = roles.filter(r => r.status !== 'Closed').length;
   const inProcess = candidates.filter(c => ['Applied', 'Interviewing'].includes(c.status)).length;
   const interviews = candidates.filter(c => c.status === 'Interviewing').length;
@@ -55,28 +53,22 @@ export default function Dashboard() {
         {/* Quick Actions */}
         <div className="flex flex-wrap gap-4 mt-8">
           <button
-            onClick={() => navigate('/roles')}
+            onClick={() => navigate('/create-job')}
             className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded text-sm"
           >
             + New Job
           </button>
           <button
-            onClick={() => navigate('/candidates/new')}
+            onClick={() => navigate('/create-candidate')}
             className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded text-sm"
           >
             + New Candidate
           </button>
           <button
-            onClick={() => alert('Feature coming soon')}
+            onClick={() => navigate('/create-client')}
             className="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded text-sm"
           >
-            + Submit to Client
-          </button>
-          <button
-            onClick={() => setShowCalendar(!showCalendar)}
-            className="bg-gray-200 hover:bg-gray-300 text-gray-700 px-4 py-2 rounded text-sm"
-          >
-            {showCalendar ? 'Hide Calendar' : 'Show Calendar'}
+            + New Client
           </button>
         </div>
 
@@ -89,22 +81,11 @@ export default function Dashboard() {
             <Task title="Follow-ups" items={candidates.filter(c => c.status === 'Applied')} />
           </div>
         </div>
-
-        {/* Calendar View */}
-        {showCalendar && (
-          <div className="mt-10">
-            <h2 className="text-xl font-semibold mb-4">Calendar View (Placeholder)</h2>
-            <div className="border rounded-lg p-6 text-sm text-gray-600 bg-gray-50">
-              Calendar integration coming soon (interviews, follow-ups, etc.)
-            </div>
-          </div>
-        )}
       </main>
     </div>
   );
 }
 
-// Summary card component
 function Card({ title, count, color }) {
   return (
     <div className={`bg-${color}-100 text-${color}-800 px-4 py-6 rounded shadow-sm`}>
@@ -114,7 +95,6 @@ function Card({ title, count, color }) {
   );
 }
 
-// Task box component
 function Task({ title, items }) {
   return (
     <div className="border rounded-lg p-4 bg-gray-50">
