@@ -42,17 +42,18 @@ function App() {
         <Route path="/register" element={<Register />} />
         <Route path="/reset-password" element={<ResetPassword />} />
 
-        {/* Protected Pages */}
+        {/* Authenticated Pages */}
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/roles" element={<Roles />} />
-        <Route path="/roles/:roleId" element={<RoleDetail />} />
+        <Route path="/roles/:roleName" element={<RoleDetail />} />
+        <Route path="/candidates/new" element={<CandidateDetail />} />
         <Route path="/candidates/:candidateId" element={<CandidateDetail />} />
         <Route path="/reports" element={<Reports />} />
         <Route path="/team" element={<Team />} />
         <Route path="/settings" element={<Settings />} />
         <Route path="/help" element={<Help />} />
 
-        {/* 404 Page */}
+        {/* Fallback */}
         <Route path="*" element={<NotFound />} />
       </Routes>
     </Router>
