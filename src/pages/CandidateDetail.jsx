@@ -1,7 +1,12 @@
 // src/pages/CandidateDetail.jsx
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
-import { doc, getDoc, updateDoc, addDoc, collection } from 'firebase/firestore';
+import {
+  doc, getDoc, updateDoc, addDoc, collection
+} from 'firebase/firestore';
+import {
+  getStorage, ref, uploadBytes, getDownloadURL
+} from 'firebase/storage';
 import { auth, db } from '../firebase';
 import { onAuthStateChanged } from 'firebase/auth';
 import Header from '../components/Header';
@@ -9,7 +14,7 @@ import Header from '../components/Header';
 export default function CandidateDetail() {
   const { candidateId } = useParams();
   const [searchParams] = useSearchParams();
-  const roleNameFromQuery = searchParams.get('role');
+  const roleFromQuery = searchParams.get('role');
 
   const [user, setUser] = useState(null);
   const [formData, setFormData] = useState({
@@ -17,8 +22,12 @@ export default function CandidateDetail() {
     email: '',
     phone: '',
     status: 'Applied',
-    role: roleNameFromQuery || ''
+    role: roleFromQuery || '',
+    notes: '',
+    resumeUrl: ''
   });
+  const [resumeFile, setResumeFile] = useState(null);
+  const [uploading, setUploading] = useState(false);
 
   const isNew = candidateId === 'new';
   const navigate = useNavigate();
@@ -27,10 +36,8 @@ export default function CandidateDetail() {
     const unsub = onAuthStateChanged(auth, async (currentUser) => {
       if (currentUser) {
         setUser(currentUser);
-
         if (!isNew) {
-          const ref = doc(db, 'users', currentUser.uid, 'candidates', candidateId);
-          const snap = await getDoc(ref);
+          const snap = await getDoc(doc(db, 'users', currentUser.uid, 'candidates', candidateId));
           if (snap.exists()) {
             setFormData(snap.data());
           }
@@ -44,10 +51,21 @@ export default function CandidateDetail() {
   }, [candidateId, isNew, navigate]);
 
   const handleChange = (e) => {
-    setFormData(prev => ({
-      ...prev,
-      [e.target.name]: e.target.value
-    }));
+    const { name, value } = e.target;
+    setFormData(prev => ({ ...prev, [name]: value }));
+  };
+
+  const handleResumeUpload = async () => {
+    if (!resumeFile || !user) return null;
+    setUploading(true);
+
+    const storage = getStorage();
+    const fileRef = ref(storage, `users/${user.uid}/resumes/${Date.now()}_${resumeFile.name}`);
+    await uploadBytes(fileRef, resumeFile);
+    const url = await getDownloadURL(fileRef);
+
+    setUploading(false);
+    return url;
   };
 
   const handleSubmit = async (e) => {
@@ -55,14 +73,22 @@ export default function CandidateDetail() {
     if (!user) return;
 
     try {
+      let resumeUrl = formData.resumeUrl;
+
+      if (resumeFile) {
+        resumeUrl = await handleResumeUpload();
+      }
+
+      const dataToSave = {
+        ...formData,
+        resumeUrl,
+        createdAt: Date.now()
+      };
+
       if (isNew) {
-        await addDoc(collection(db, 'users', user.uid, 'candidates'), {
-          ...formData,
-          createdAt: Date.now()
-        });
+        await addDoc(collection(db, 'users', user.uid, 'candidates'), dataToSave);
       } else {
-        const ref = doc(db, 'users', user.uid, 'candidates', candidateId);
-        await updateDoc(ref, formData);
+        await updateDoc(doc(db, 'users', user.uid, 'candidates', candidateId), dataToSave);
       }
 
       navigate('/roles');
@@ -140,9 +166,43 @@ export default function CandidateDetail() {
             </select>
           </div>
 
+          <div>
+            <label className="block text-sm font-medium">Notes</label>
+            <textarea
+              name="notes"
+              value={formData.notes}
+              onChange={handleChange}
+              className="mt-1 block w-full border px-3 py-2 rounded"
+              rows="3"
+              placeholder="Internal comments, feedback, etc."
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium">Resume (PDF)</label>
+            <input
+              type="file"
+              accept=".pdf"
+              onChange={(e) => setResumeFile(e.target.files[0])}
+              className="mt-1 block w-full"
+            />
+            {uploading && <p className="text-xs text-gray-500 mt-1">Uploading...</p>}
+            {formData.resumeUrl && (
+              <a
+                href={formData.resumeUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-sm text-indigo-600 underline mt-2 inline-block"
+              >
+                View current resume
+              </a>
+            )}
+          </div>
+
           <button
             type="submit"
             className="w-full bg-indigo-600 hover:bg-indigo-700 text-white py-2 rounded font-medium"
+            disabled={uploading}
           >
             {isNew ? 'Add Candidate' : 'Update Candidate'}
           </button>

@@ -1,11 +1,13 @@
 // src/App.js
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 
+// Public pages
 import Landing from './pages/Landing';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import ResetPassword from './pages/ResetPassword';
 
+// Core user pages
 import Dashboard from './pages/Dashboard';
 import Roles from './pages/Roles';
 import RoleDetail from './pages/RoleDetail';
@@ -14,6 +16,7 @@ import Reports from './pages/Reports';
 import Team from './pages/Team';
 import Settings from './pages/Settings';
 import Help from './pages/Help';
+import Clients from './pages/Clients';
 
 function NotFound() {
   return (
@@ -36,7 +39,7 @@ function App() {
   return (
     <Router>
       <Routes>
-        {/* Public Pages */}
+        {/* Public Access */}
         <Route path="/" element={<Landing />} />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
@@ -48,12 +51,13 @@ function App() {
         <Route path="/roles/:roleName" element={<RoleDetail />} />
         <Route path="/candidates/new" element={<CandidateDetail />} />
         <Route path="/candidates/:candidateId" element={<CandidateDetail />} />
+        <Route path="/clients" element={<Clients />} />
         <Route path="/reports" element={<Reports />} />
         <Route path="/team" element={<Team />} />
         <Route path="/settings" element={<Settings />} />
         <Route path="/help" element={<Help />} />
 
-        {/* Fallback */}
+        {/* Fallback route */}
         <Route path="*" element={<NotFound />} />
       </Routes>
     </Router>
