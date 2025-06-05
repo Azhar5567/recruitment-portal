@@ -14,9 +14,11 @@ export default function Roles() {
   const [user, setUser] = useState(null);
   const [isPaid, setIsPaid] = useState(false);
   const [roleName, setRoleName] = useState('');
+  const [companyName, setCompanyName] = useState('');
   const [roles, setRoles] = useState([]);
   const [candidates, setCandidates] = useState({});
   const [filter, setFilter] = useState('');
+  const [companyFilter, setCompanyFilter] = useState('');
   const [statusTab, setStatusTab] = useState('All');
   const [showUpgrade, setShowUpgrade] = useState(false);
 
@@ -60,8 +62,9 @@ export default function Roles() {
   }, [user]);
 
   const addRole = async () => {
-    const name = roleName.trim();
-    if (!name || !user) return;
+    const role = roleName.trim();
+    const company = companyName.trim();
+    if (!role || !company || !user) return;
 
     const freeLimit = 3;
     const activeRoles = roles.filter(r => r.status !== 'Closed');
@@ -72,12 +75,21 @@ export default function Roles() {
     }
 
     const ref = await addDoc(collection(db, 'users', user.uid, 'roles'), {
-      name,
-      status: 'Active'
+      name: role,
+      company: company,
+      status: 'Active',
+      createdAt: Date.now()
     });
 
     setRoleName('');
-    setRoles(prev => [...prev, { id: ref.id, name, status: 'Active' }]);
+    setCompanyName('');
+    setRoles(prev => [...prev, {
+      id: ref.id,
+      name: role,
+      company: company,
+      status: 'Active',
+      createdAt: Date.now()
+    }]);
   };
 
   const deleteRole = async (id) => {
@@ -96,9 +108,10 @@ export default function Roles() {
   const filteredRoles = roles
     .filter(r =>
       r.name.toLowerCase().includes(filter.toLowerCase()) &&
+      r.company.toLowerCase().includes(companyFilter.toLowerCase()) &&
       (statusTab === 'All' || r.status === statusTab)
     )
-    .sort((a, b) => a.name.localeCompare(b.name));
+    .sort((a, b) => b.createdAt - a.createdAt);
 
   return (
     <div className="min-h-screen bg-white text-gray-800">
@@ -110,7 +123,13 @@ export default function Roles() {
           <input
             value={roleName}
             onChange={(e) => setRoleName(e.target.value)}
-            placeholder="New role name"
+            placeholder="Role title"
+            className="border px-3 py-2 rounded w-full sm:w-64"
+          />
+          <input
+            value={companyName}
+            onChange={(e) => setCompanyName(e.target.value)}
+            placeholder="Company name"
             className="border px-3 py-2 rounded w-full sm:w-64"
           />
           <button
@@ -119,10 +138,19 @@ export default function Roles() {
           >
             Add Role
           </button>
+        </div>
+
+        <div className="flex flex-wrap gap-3 mb-6">
           <input
             value={filter}
             onChange={(e) => setFilter(e.target.value)}
-            placeholder="Search roles..."
+            placeholder="Search by role name"
+            className="border px-3 py-2 rounded w-full sm:w-64"
+          />
+          <input
+            value={companyFilter}
+            onChange={(e) => setCompanyFilter(e.target.value)}
+            placeholder="Filter by company"
             className="border px-3 py-2 rounded w-full sm:w-64"
           />
         </div>
@@ -144,7 +172,7 @@ export default function Roles() {
         {filteredRoles.length === 0 ? (
           <div className="text-center text-gray-500 mt-12">
             <p>No roles found.</p>
-            <p className="text-xs mt-1">Try a different status or search.</p>
+            <p className="text-xs mt-1">Try a different status, company or search.</p>
           </div>
         ) : (
           <div className="space-y-4">
@@ -158,6 +186,7 @@ export default function Roles() {
                   className="cursor-pointer flex-1"
                 >
                   <p className="font-medium text-lg">{role.name}</p>
+                  <p className="text-sm text-gray-600">Company: {role.company}</p>
                   <p className="text-xs text-gray-500">
                     {candidates[role.name] || 0} candidate{(candidates[role.name] || 0) !== 1 && 's'}
                   </p>
