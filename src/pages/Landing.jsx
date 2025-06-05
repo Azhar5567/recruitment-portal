@@ -1,8 +1,21 @@
 // src/pages/Landing.jsx
 import { useNavigate } from 'react-router-dom';
+import { useEffect } from 'react';
+import { onAuthStateChanged } from 'firebase/auth';
+import { auth } from '../firebase';
 
 export default function Landing() {
   const navigate = useNavigate();
+
+  // Optional: redirect logged-in users to dashboard
+  useEffect(() => {
+    const unsub = onAuthStateChanged(auth, (user) => {
+      if (user) {
+        navigate('/dashboard');
+      }
+    });
+    return () => unsub();
+  }, [navigate]);
 
   return (
     <div className="min-h-screen bg-white flex flex-col text-gray-800">
@@ -19,7 +32,7 @@ export default function Landing() {
           </button>
           <button
             type="button"
-            onClick={() => navigate('/login')}
+            onClick={() => navigate('/register')}
             className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded"
           >
             Try Free
@@ -37,7 +50,7 @@ export default function Landing() {
 
         <div className="flex flex-col sm:flex-row justify-center gap-4 mb-12">
           <button
-            onClick={() => navigate('/login')}
+            onClick={() => navigate('/register')}
             className="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-3 rounded text-lg"
           >
             Get Started Free
